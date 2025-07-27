@@ -22,7 +22,7 @@ func CreateArchive(files []string, archiveName string) ([]string, string) {
 	}
 	
 	// Создание архива
-	zipName := archiveName + ".zip"
+	zipName := "archives/" + archiveName + ".zip"
 	zipFile, _ := os.Create(zipName)
 	defer zipFile.Close()
 	zipWriter := zip.NewWriter(zipFile)
@@ -53,5 +53,5 @@ func CreateArchive(files []string, archiveName string) ([]string, string) {
 		_, err = writer.Write(content)
 	}
 
-	return failedFiles, zipName
+	return failedFiles, archiveName + ".zip"
 }

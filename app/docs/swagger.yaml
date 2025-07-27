@@ -1,0 +1,163 @@
+basePath: /api/v1
+definitions:
+  schemas.APIError:
+    properties:
+      error:
+        type: string
+    type: object
+  schemas.CreatedTask:
+    properties:
+      task_id:
+        example: b841515d-476e-4eb7-956e-5a6976d7f026
+        type: string
+    type: object
+  schemas.InsertFiles:
+    properties:
+      files_links:
+        items:
+          type: string
+        type: array
+    type: object
+  schemas.MessageAnswer:
+    properties:
+      message:
+        type: string
+    type: object
+  schemas.TaskStatus:
+    properties:
+      archive_link:
+        format: nullable
+        type: string
+      failed_files:
+        example:
+        - file1.jpg
+        - file2.pdf
+        items:
+          format: nullable
+          type: string
+        type: array
+      task_status:
+        enum:
+        - in_progress
+        - completed
+        example: in_progress
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  title: Zip API With Swagger
+  version: "1.0"
+paths:
+  /zip_task:
+    post:
+      description: Create task for archiver
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/schemas.CreatedTask'
+        "423":
+          description: Locked
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+      summary: Create task
+      tags:
+      - Zip-Archive
+  /zip_task/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Add files to task
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Files to add
+        in: body
+        name: files
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.InsertFiles'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.MessageAnswer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+      summary: Update task
+      tags:
+      - Zip-Archive
+  /zip_task/{id}/status:
+    get:
+      description: Check status of task if it has less than 3 files. If task has 3
+        files it returns **link** to archive
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.TaskStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+      summary: Check task status
+      tags:
+      - Zip-Archive
+  /zip_task/download/{file}:
+    get:
+      description: Download archive from link
+      parameters:
+      - description: Task ID
+        in: path
+        name: file
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.TaskStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.APIError'
+      summary: Download archive
+      tags:
+      - Zip-Archive
+swagger: "2.0"

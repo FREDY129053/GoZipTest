@@ -1,0 +1,245 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Zip API With Swagger",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/zip_task": {
+            "post": {
+                "description": "Create task for archiver",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Zip-Archive"
+                ],
+                "summary": "Create task",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.CreatedTask"
+                        }
+                    },
+                    "423": {
+                        "description": "Locked",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/zip_task/download/{file}": {
+            "get": {
+                "description": "Download archive from link",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Zip-Archive"
+                ],
+                "summary": "Download archive",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "file",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.TaskStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/zip_task/{id}": {
+            "put": {
+                "description": "Add files to task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Zip-Archive"
+                ],
+                "summary": "Update task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Files to add",
+                        "name": "files",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.InsertFiles"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.MessageAnswer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/zip_task/{id}/status": {
+            "get": {
+                "description": "Check status of task if it has less than 3 files. If task has 3 files it returns **link** to archive",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Zip-Archive"
+                ],
+                "summary": "Check task status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.TaskStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.APIError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "schemas.APIError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemas.CreatedTask": {
+            "type": "object",
+            "properties": {
+                "task_id": {
+                    "type": "string",
+                    "example": "b841515d-476e-4eb7-956e-5a6976d7f026"
+                }
+            }
+        },
+        "schemas.InsertFiles": {
+            "type": "object",
+            "properties": {
+                "files_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "schemas.MessageAnswer": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemas.TaskStatus": {
+            "type": "object",
+            "properties": {
+                "archive_link": {
+                    "type": "string",
+                    "format": "nullable"
+                },
+                "failed_files": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "nullable"
+                    },
+                    "example": [
+                        "file1.jpg",
+                        "file2.pdf"
+                    ]
+                },
+                "task_status": {
+                    "type": "string",
+                    "enum": [
+                        "in_progress",
+                        "completed"
+                    ],
+                    "example": "in_progress"
+                }
+            }
+        }
+    }
+}

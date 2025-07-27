@@ -7,8 +7,14 @@ import (
 	"zip-app/internal/database"
 	"zip-app/internal/repository"
 	"zip-app/internal/service"
+	_ "zip-app/docs"
 )
 
+// @title           Zip API With Swagger
+// @version         1.0
+
+// @host      localhost:8080
+// @BasePath  /api/v1
 func main() {
 	db := database.NewDatabase()
 	repo := repository.NewRepository(db)

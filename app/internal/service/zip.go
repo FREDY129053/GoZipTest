@@ -91,10 +91,10 @@ func (s *ZipService) CheckStatus(taskID uuid.UUID) Answer {
 
 	if len(task.Files) == 3 && task.Status != models.Completed {
 		task.Status = models.Completed
-		failedFiles, archive := helpers.CreateArchive(task.Files, "archive")
+		failedFiles, archive := helpers.CreateArchive(task.Files, taskID.String())
 		
-		response := map[string]interface{}{}
-		response["archive_link"] = archive
+		response := map[string]any{}
+		response["archive_link"] = "http://localhost:8080/api/v1/zip_task/download/" + archive
 		response["task_status"] = task.Status.String()
 
 		if len(failedFiles) != 0 {

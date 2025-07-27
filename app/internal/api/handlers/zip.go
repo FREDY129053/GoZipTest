@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"path"
+	"zip-app/internal/schemas"
 	"zip-app/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -37,9 +39,23 @@ func (h *ZipHandler) UpdateTask(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id input format(must be UUID)"})
 		return
-	} 
-	files := []string{"t1"}
-	err = h.service.UpdateTask(idParse, files)
+	}
+
+	var filesToAdd schemas.InsertFiles
+
+	if err = c.ShouldBindJSON(&filesToAdd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input files"})
+		return
+	}
+
+	for _, file := range filesToAdd.Links {
+		if path.Ext(file) != ".jpg" || path.Ext(file) != ".pdf" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "only .pdf or .jpg files"})
+			return
+		}
+	}
+
+	err = h.service.UpdateTask(idParse, filesToAdd.Links)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -56,7 +72,7 @@ func (h *ZipHandler) CheckStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id input format(must be UUID)"})
 		return
 	} 
-	res := h.service.CheckStatus(idParse)
+	res, err := h.service.CheckStatus(idParse)
 
 	c.JSON(http.StatusOK, gin.H{"message": res})
 }

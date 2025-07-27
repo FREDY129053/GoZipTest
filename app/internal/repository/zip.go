@@ -55,7 +55,7 @@ func (r *ZipRepository) UpdateTask(id uuid.UUID, files []string) error {
 
 	return errors.New("task not found")
 }
-func (r *ZipRepository) GetTaskStatus(id uuid.UUID) string {
-	task, _ := r.DB.GetTask(id)
-	return task.Status.String()
+
+func (r *ZipRepository) GetTask(id uuid.UUID) (*models.Task, error) {
+	return r.DB.GetTask(id)
 }

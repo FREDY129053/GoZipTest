@@ -1,5 +1,5 @@
 POST http://localhost:8080/api/v1/zip/
 
-GET http://localhost:8080/api/v1/zip/a982d07e-ccce-476a-b772-7282ea15cacf
+GET http://localhost:8080/api/v1/zip/e8066f4b-c402-4008-bad0-05f2bf38f286
 
 PUT http://localhost:8080/api/v1/zip/a982d07e-ccce-476a-b772-7282ea15cacf

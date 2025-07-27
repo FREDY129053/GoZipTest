@@ -43,7 +43,7 @@ func (r *ZipRepository) CreateTask(userID string) (uuid.UUID, error) {
 	return task.ID, nil
 }
 
-func (r *ZipRepository) UpdateTask(id uuid.UUID, files []string) error {
+func (r *ZipRepository) UpdateTaskFiles(id uuid.UUID, files []string) error {
 	for _, tasks := range r.DB.Records {
 		for _, task := range tasks {
 			if id == task.ID {

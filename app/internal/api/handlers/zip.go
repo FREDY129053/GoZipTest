@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"path"
 	"zip-app/internal/schemas"
@@ -23,13 +24,10 @@ func NewHandler(serv service.ZipService) ZipHandler {
 func (h *ZipHandler) CreateTask(c *gin.Context) {
 	ip, userAgent := c.ClientIP(), c.GetHeader("User-Agent")
 	
-	res, err := h.service.CreateTask(ip, userAgent)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-		return
-	}
+	res := h.service.CreateTask(ip, userAgent)
 
-	c.JSON(http.StatusCreated, gin.H{"id": res})
+	log.Println(res.Err)
+	c.JSON(res.Code, res.Message)
 }
 
 func (h *ZipHandler) UpdateTask(c *gin.Context) {
@@ -55,13 +53,10 @@ func (h *ZipHandler) UpdateTask(c *gin.Context) {
 		}
 	}
 
-	err = h.service.UpdateTask(idParse, filesToAdd.Links)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	res := h.service.UpdateTask(idParse, filesToAdd.Links)
 
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	log.Println(res.Err)
+	c.JSON(res.Code, res.Message)
 }
 
 func (h *ZipHandler) CheckStatus(c *gin.Context) {
@@ -72,7 +67,8 @@ func (h *ZipHandler) CheckStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id input format(must be UUID)"})
 		return
 	} 
-	res, err := h.service.CheckStatus(idParse)
+	res := h.service.CheckStatus(idParse)
 
-	c.JSON(http.StatusOK, gin.H{"message": res})
+	log.Println(res.Err)
+	c.JSON(res.Code, res.Message)
 }

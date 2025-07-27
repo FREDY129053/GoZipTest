@@ -3,7 +3,8 @@ package service
 import (
 	"crypto/sha256"
 	"errors"
-	"log"
+	"net/http"
+	"zip-app/internal/models"
 	"zip-app/internal/repository"
 	"zip-app/pkg/helpers"
 
@@ -11,7 +12,9 @@ import (
 )
 
 type Answer struct {
-
+	Code int
+	Message any
+	Err error
 }
 
 type ZipService struct {
@@ -24,37 +27,85 @@ func NewService(repository repository.ZipRepository) ZipService {
 	}
 }
 
-func (s *ZipService) CreateTask(userIP, userAgent string) (uuid.UUID, error) {
+func (s *ZipService) CreateTask(userIP, userAgent string) Answer {
 	hasher := sha256.New()
 	hasher.Write([]byte(userIP + userAgent))
 	userID := string(hasher.Sum(nil))
 
-	return s.repo.CreateTask(userID)
+	resID, err := s.repo.CreateTask(userID)
+	if err != nil {
+		return Answer{
+			Code: http.StatusLocked,
+			Message: map[string]string{"error": err.Error()},
+			Err: err,
+		}
+	}
+
+	return Answer{
+		Code: http.StatusCreated,
+		Message: map[string]string{"task_id": resID.String()},
+		Err: nil,
+	}
 }
 
-func (s *ZipService) UpdateTask(taskID uuid.UUID, files []string) error {
+func (s *ZipService) UpdateTask(taskID uuid.UUID, files []string) Answer {
 	task, err := s.repo.GetTask(taskID)
 	if err != nil {
-		return err
+		return Answer{
+			Code: http.StatusNotFound,
+			Message: map[string]string{"error": err.Error()},
+			Err: err,
+		}
 	}
 	
 	if len(task.Files) >= 3 {
-		return errors.New("zip progress...")
+		return Answer{
+			Code: http.StatusUnprocessableEntity,
+			Message: map[string]string{"error": "maximum count of files (3 files) in task reached and u can get archive"},
+			Err: errors.New("max files count reached"),
+		}
 	}
 
-	s.repo.UpdateTask(taskID, files)
-	return nil
+	filesToAddCount := 3 - len(task.Files)
+	if len(files) > filesToAddCount {
+		files = files[:filesToAddCount]
+	} 
+
+	s.repo.UpdateTaskFiles(taskID, files)
+	return Answer{
+		Code: http.StatusOK,
+		Message: map[string]string{"message": "files added"},
+		Err: nil,
+	}
 }
 
-func (s *ZipService) CheckStatus(taskID uuid.UUID) (*string, error) {
+func (s *ZipService) CheckStatus(taskID uuid.UUID) Answer {
 	task, err := s.repo.GetTask(taskID)
 	if err != nil {
-		return nil, err
+		return Answer{
+			Code: http.StatusNotFound,
+			Message: map[string]string{"error": err.Error()},
+			Err: err,
+		}
 	}
 
-	if len(task.Files) == 3 {
-		_, archive := helpers.CreateArchive(task.Files, "archive")
-		return &archive, nil
+	if len(task.Files) == 3 && task.Status != models.Completed {
+		task.Status = models.Completed
+		failedFiles, archive := helpers.CreateArchive(task.Files, "archive")
+		
+		response := map[string]interface{}{}
+		response["archive_link"] = archive
+		response["task_status"] = task.Status.String()
+
+		if len(failedFiles) != 0 {
+			response["failed_files"] = failedFiles
+		}
+
+		return Answer{
+			Code: http.StatusOK,
+			Message: response,
+			Err: nil,
+		}
 	}
 
 	// tFiles := []string{
@@ -63,6 +114,9 @@ func (s *ZipService) CheckStatus(taskID uuid.UUID) (*string, error) {
 	// 	"https://static3999.makeuseofimages.com/wordpress/wp-content/uploads/2023/02/golang-logo-on-a-code-background.jpg",
 	// }
 	
-	status := task.Status.String()
-	return &status, nil
+	return Answer{
+		Code: http.StatusOK,
+		Message: map[string]string{"task_status": task.Status.String()},
+		Err: nil,
+	}
 }

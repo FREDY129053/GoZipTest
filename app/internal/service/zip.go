@@ -58,6 +58,21 @@ func (s *ZipService) UpdateTask(taskID uuid.UUID, files []string) Answer {
 		}
 	}
 	
+	// Замена файла
+	for i, taskFile := range task.Files {
+		for _, file := range files {
+			if file == taskFile {
+				task.Files[i] = file
+
+				return Answer{
+					Code: http.StatusOK,
+					Message: map[string]string{"message": "file changed"},
+					Err: nil,
+				}
+			}
+		}
+	}
+
 	if len(task.Files) >= 3 {
 		return Answer{
 			Code: http.StatusUnprocessableEntity,
